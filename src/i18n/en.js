@@ -23,7 +23,7 @@ export const en = {
   hourlyForecast: 'Today\'s forecast',
   weeklyForecast: '7-Day forecast',
   weatherStats: 'Weather statistics',
-  favoriteCities: 'Favorite cities',
+  favoriteCities: 'Favorite City',
   language: 'Language',
   english: 'English',
   hindi: 'Hindi',

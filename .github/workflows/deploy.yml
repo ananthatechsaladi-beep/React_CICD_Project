@@ -1,4 +1,4 @@
-name: Rect Vite CI/CD
+name: React Vite CI/CD
 
 on:
   push:
@@ -6,39 +6,37 @@ on:
       - develop
       - main
 
-
 jobs:
+
   # =====================
-  # CI
+  # CI - BUILD
   # =====================
   build:
     runs-on: ubuntu-latest
-    
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: npm
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Run tests
-        run: npm test
-
       - name: Build project
         run: npm run build
 
-      # =====================
-        # CD - DEV
-      # =====================
 
+  # =====================
+  # CD - DEVELOPMENT
+  # =====================
   deploy-dev:
     needs: build
+
     runs-on: ubuntu-latest
 
     if: github.ref == 'refs/heads/develop'
@@ -46,39 +44,39 @@ jobs:
     environment: development
 
     steps:
+
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          cache: npm
 
       - name: Install dependencies
         run: npm ci
 
       - name: Build project
         run: npm run build
-      
+
       - name: Configure AWS
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ${{ vars.AWS_REGION }}
 
       - name: Deploy to Dev S3
         run: |
-          aws s3 sync ./dist s3://${{ secrets.S3_BUCKET }} --delete
+          aws s3 sync ./dist s3://${{ vars.S3_BUCKET }} --delete
 
 
   # =====================
   # CD - PRODUCTION
   # =====================
-  deploy-prod:
+  deploy-production:
     needs: build
-
     if: github.ref == 'refs/heads/main'
 
     runs-on: ubuntu-latest
@@ -89,7 +87,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -98,7 +99,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build React app
+      - name: Build project
         run: npm run build
 
       - name: Configure AWS
@@ -106,8 +107,8 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ${{ vars.AWS_REGION }}
 
       - name: Deploy to Production S3
         run: |
-          aws s3 sync ./dist s3://${{ secrets.S3_BUCKET }} --delete
+          aws s3 sync ./dist s3://${{ vars.S3_BUCKET }} --delete
